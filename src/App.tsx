@@ -26,6 +26,7 @@ import Analytics from "./pages/Analytics";
 import Team from "./pages/Team";
 import EmailPreferences from "./pages/EmailPreferences";
 import Webhooks from "./pages/Webhooks";
+import PaymentCallback from "./pages/PaymentCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ function AppRoutes() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/account-locked" element={<AccountLocked />} />
       <Route path="/pricing" element={<Pricing />} />
+      <Route path="/payment/callback" element={<PaymentCallback />} />
       
       {/* Protected routes */}
       <Route path="/dashboard" element={
