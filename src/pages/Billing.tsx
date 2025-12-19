@@ -1,4 +1,4 @@
-import { CreditCard, ExternalLink, AlertCircle } from 'lucide-react';
+import { CreditCard, ExternalLink, AlertCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useBilling } from '@/contexts/BillingContext';
 import { getPlanById, PLANS } from '@/types/billing';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 
 const Billing = () => {
@@ -143,6 +143,14 @@ const Billing = () => {
               <Button onClick={openCustomerPortal} variant="outline" className="w-full">
                 {currentPlan === 'free' ? 'Add Payment Method' : 'Update Payment'}
               </Button>
+              {currentPlan !== 'free' && (
+                <Link to="/dashboard/invoices" className="block mt-2">
+                  <Button variant="ghost" className="w-full justify-start text-muted-foreground">
+                    <FileText className="h-4 w-4 mr-2" />
+                    View invoice history
+                  </Button>
+                </Link>
+              )}
             </CardContent>
           </Card>
         </div>

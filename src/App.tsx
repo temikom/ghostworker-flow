@@ -20,6 +20,7 @@ import Orders from "./pages/Orders";
 import Settings from "./pages/Settings";
 import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
+import Invoices from "./pages/Invoices";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,11 @@ function AppRoutes() {
       <Route path="/dashboard/billing" element={
         <ProtectedRoute>
           <Billing />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard/invoices" element={
+        <ProtectedRoute>
+          <Invoices />
         </ProtectedRoute>
       } />
       <Route path="/dashboard/settings" element={
