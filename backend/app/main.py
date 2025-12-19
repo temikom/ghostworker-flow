@@ -10,6 +10,7 @@ from app.db.redis import redis_service
 from app.api.routes import auth
 from app.api.routes import notifications
 from app.api.routes import billing
+from app.api.routes import webhooks
 from app.middleware.rate_limiter import RateLimitMiddleware
 
 @asynccontextmanager
@@ -39,6 +40,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(notifications.router, prefix=settings.API_V1_PREFIX)
 app.include_router(billing.router, prefix=settings.API_V1_PREFIX)
+app.include_router(webhooks.router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/health")
 async def health():
