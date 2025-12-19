@@ -18,7 +18,9 @@ import {
   Loader2,
   CreditCard,
   BarChart3,
-  Users
+  Users,
+  Mail,
+  Webhook
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -34,6 +36,8 @@ const navItems = [
   { icon: BarChart3, label: "Analytics", path: "/dashboard/analytics" },
   { icon: Users, label: "Team", path: "/dashboard/team" },
   { icon: CreditCard, label: "Billing", path: "/dashboard/billing" },
+  { icon: Webhook, label: "Webhooks", path: "/dashboard/webhooks" },
+  { icon: Mail, label: "Email Preferences", path: "/dashboard/email-preferences" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
 

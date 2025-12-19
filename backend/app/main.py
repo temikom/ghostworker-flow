@@ -10,6 +10,7 @@ from app.db.redis import redis_service
 from app.api.routes import auth
 from app.api.routes import notifications
 from app.api.routes import billing
+from app.middleware.rate_limiter import RateLimitMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,6 +23,9 @@ app = FastAPI(
     version=settings.APP_VERSION,
     lifespan=lifespan
 )
+
+# Add rate limiting middleware (must be before CORS)
+app.add_middleware(RateLimitMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

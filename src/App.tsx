@@ -24,6 +24,8 @@ import Billing from "./pages/Billing";
 import Invoices from "./pages/Invoices";
 import Analytics from "./pages/Analytics";
 import Team from "./pages/Team";
+import EmailPreferences from "./pages/EmailPreferences";
+import Webhooks from "./pages/Webhooks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -85,6 +87,16 @@ function AppRoutes() {
       <Route path="/dashboard/settings" element={
         <ProtectedRoute>
           <Settings />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard/email-preferences" element={
+        <ProtectedRoute>
+          <EmailPreferences />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard/webhooks" element={
+        <ProtectedRoute>
+          <Webhooks />
         </ProtectedRoute>
       } />
       
