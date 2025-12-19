@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.redis import redis_service
 from app.api.routes import auth
+from app.api.routes import notifications
+from app.api.routes import billing
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,7 +31,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include routers
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
+app.include_router(notifications.router, prefix=settings.API_V1_PREFIX)
+app.include_router(billing.router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/health")
 async def health():

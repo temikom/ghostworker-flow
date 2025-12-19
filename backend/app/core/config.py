@@ -53,13 +53,29 @@ class Settings(BaseSettings):
     # Frontend URL (for email links)
     FRONTEND_URL: str = "http://localhost:5173"
     
-    # Rate Limiting
+    # Rate Limiting (default for free tier)
     RATE_LIMIT_PER_MINUTE: int = 60
     AUTH_RATE_LIMIT_PER_MINUTE: int = 10
+    API_RATE_LIMIT_PER_MINUTE: int = 100
+    
+    # Plan-based rate limits
+    RATE_LIMIT_FREE: int = 60
+    RATE_LIMIT_PRO: int = 200
+    RATE_LIMIT_BUSINESS: int = 500
+    RATE_LIMIT_ENTERPRISE: int = 1000
     
     # Security Alerts
     MAX_FAILED_LOGIN_ATTEMPTS: int = 5
     ACCOUNT_LOCKOUT_MINUTES: int = 30
+    
+    # Paystack
+    PAYSTACK_SECRET_KEY: str = ""
+    PAYSTACK_PUBLIC_KEY: str = ""
+    PAYSTACK_WEBHOOK_SECRET: str = ""
+    
+    # Coinbase Commerce
+    COINBASE_COMMERCE_API_KEY: str = ""
+    COINBASE_WEBHOOK_SECRET: str = ""
     
     class Config:
         env_file = ".env"
