@@ -1,26 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Trash2, Play, ExternalLink, CheckCircle2, XCircle, Clock } from "lucide-react";
-
-interface Webhook {
-  id: string;
-  name: string;
-  url: string;
-  status: "active" | "inactive" | "failed";
-  events: string[];
-  totalDeliveries: number;
-  successfulDeliveries: number;
-  failedDeliveries: number;
-  lastDeliveryAt: string | null;
-}
+import { Plus, Trash2, Play, ExternalLink, CheckCircle2, XCircle, Clock, RefreshCw, Key, Loader2 } from "lucide-react";
+import { webhookApi, Webhook, getErrorMessage } from "@/lib/api";
 
 const WEBHOOK_EVENTS = [
   { id: "message.created", name: "New Message", category: "Messages" },
@@ -34,58 +25,116 @@ const WEBHOOK_EVENTS = [
   { id: "billing.payment_failed", name: "Payment Failed", category: "Billing" },
 ];
 
-const mockWebhooks: Webhook[] = [
-  {
-    id: "1",
-    name: "Slack Notifications",
-    url: "https://hooks.slack.com/services/xxx",
-    status: "active",
-    events: ["message.created", "order.created"],
-    totalDeliveries: 1250,
-    successfulDeliveries: 1245,
-    failedDeliveries: 5,
-    lastDeliveryAt: "2024-01-15T10:30:00Z",
-  },
-];
-
 export default function Webhooks() {
-  const [webhooks, setWebhooks] = useState<Webhook[]>(mockWebhooks);
+  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newWebhook, setNewWebhook] = useState({ name: "", url: "", secret: "", events: [] as string[] });
+  const [isCreating, setIsCreating] = useState(false);
+  const [newWebhook, setNewWebhook] = useState({ name: "", url: "", events: [] as string[] });
   const [testingId, setTestingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
 
-  const handleCreate = () => {
+  useEffect(() => {
+    fetchWebhooks();
+  }, []);
+
+  const fetchWebhooks = async () => {
+    setIsLoading(true);
+    try {
+      const data = await webhookApi.getWebhooks();
+      setWebhooks(data);
+    } catch (error) {
+      console.error('Failed to fetch webhooks:', error);
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreate = async () => {
     if (!newWebhook.name || !newWebhook.url || newWebhook.events.length === 0) {
       toast.error("Please fill in all required fields");
       return;
     }
-    const webhook: Webhook = {
-      id: Date.now().toString(),
-      name: newWebhook.name,
-      url: newWebhook.url,
-      status: "active",
-      events: newWebhook.events,
-      totalDeliveries: 0,
-      successfulDeliveries: 0,
-      failedDeliveries: 0,
-      lastDeliveryAt: null,
-    };
-    setWebhooks([...webhooks, webhook]);
-    setNewWebhook({ name: "", url: "", secret: "", events: [] });
-    setIsDialogOpen(false);
-    toast.success("Webhook created successfully");
+
+    setIsCreating(true);
+    try {
+      const webhook = await webhookApi.createWebhook({
+        name: newWebhook.name,
+        url: newWebhook.url,
+        events: newWebhook.events,
+      });
+      
+      setWebhooks([...webhooks, webhook]);
+      setNewWebhook({ name: "", url: "", events: [] });
+      setIsDialogOpen(false);
+      toast.success("Webhook created successfully");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsCreating(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setWebhooks(webhooks.filter(w => w.id !== id));
-    toast.success("Webhook deleted");
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await webhookApi.deleteWebhook(id);
+      setWebhooks(webhooks.filter(w => w.id !== id));
+      toast.success("Webhook deleted");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const handleTest = async (id: string) => {
     setTestingId(id);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    toast.success("Test webhook sent successfully");
-    setTestingId(null);
+    try {
+      const result = await webhookApi.testWebhook(id);
+      if (result.success) {
+        toast.success(`Test webhook sent successfully (Status: ${result.status_code})`);
+      } else {
+        toast.error(`Test failed: ${result.error}`);
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setTestingId(null);
+    }
+  };
+
+  const handleRegenerateSecret = async (id: string) => {
+    setRegeneratingId(id);
+    try {
+      const result = await webhookApi.regenerateSecret(id);
+      toast.success("Secret regenerated. Copy it now - it won't be shown again.");
+      
+      // Show secret in a dialog or copy to clipboard
+      if (result.secret) {
+        await navigator.clipboard.writeText(result.secret);
+        toast.info("New secret copied to clipboard");
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setRegeneratingId(null);
+    }
+  };
+
+  const handleToggleActive = async (webhook: Webhook) => {
+    try {
+      const updated = await webhookApi.updateWebhook(webhook.id, {
+        is_active: !webhook.is_active,
+      });
+      
+      setWebhooks(webhooks.map(w => w.id === webhook.id ? updated : w));
+      toast.success(updated.is_active ? "Webhook activated" : "Webhook deactivated");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
   };
 
   const toggleEvent = (eventId: string) => {
@@ -97,13 +146,43 @@ export default function Webhooks() {
     }));
   };
 
-  const getStatusBadge = (status: Webhook["status"]) => {
-    switch (status) {
-      case "active": return <Badge className="bg-green-500/10 text-green-500">Active</Badge>;
-      case "inactive": return <Badge variant="secondary">Inactive</Badge>;
-      case "failed": return <Badge variant="destructive">Failed</Badge>;
+  const getStatusBadge = (webhook: Webhook) => {
+    if (!webhook.is_active) {
+      return <Badge variant="secondary">Inactive</Badge>;
     }
+    if (webhook.failure_count > 5) {
+      return <Badge variant="destructive">Failed</Badge>;
+    }
+    return <Badge className="bg-green-500/10 text-green-500">Active</Badge>;
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Webhooks</h1>
+              <p className="text-muted-foreground">Configure webhooks to receive real-time event notifications</p>
+            </div>
+          </div>
+          <div className="grid gap-4">
+            {[1, 2].map(i => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-64" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -125,22 +204,32 @@ export default function Webhooks() {
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
-                  <Input id="name" placeholder="My Webhook" value={newWebhook.name} onChange={(e) => setNewWebhook({ ...newWebhook, name: e.target.value })} />
+                  <Input 
+                    id="name" 
+                    placeholder="My Webhook" 
+                    value={newWebhook.name} 
+                    onChange={(e) => setNewWebhook({ ...newWebhook, name: e.target.value })} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="url">Endpoint URL</Label>
-                  <Input id="url" placeholder="https://example.com/webhook" value={newWebhook.url} onChange={(e) => setNewWebhook({ ...newWebhook, url: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="secret">Secret (optional)</Label>
-                  <Input id="secret" type="password" placeholder="Signing secret for verification" value={newWebhook.secret} onChange={(e) => setNewWebhook({ ...newWebhook, secret: e.target.value })} />
+                  <Input 
+                    id="url" 
+                    placeholder="https://example.com/webhook" 
+                    value={newWebhook.url} 
+                    onChange={(e) => setNewWebhook({ ...newWebhook, url: e.target.value })} 
+                  />
                 </div>
                 <div className="space-y-3">
                   <Label>Events to subscribe</Label>
                   <div className="grid grid-cols-2 gap-3">
                     {WEBHOOK_EVENTS.map(event => (
                       <div key={event.id} className="flex items-center space-x-2">
-                        <Checkbox id={event.id} checked={newWebhook.events.includes(event.id)} onCheckedChange={() => toggleEvent(event.id)} />
+                        <Checkbox 
+                          id={event.id} 
+                          checked={newWebhook.events.includes(event.id)} 
+                          onCheckedChange={() => toggleEvent(event.id)} 
+                        />
                         <Label htmlFor={event.id} className="text-sm font-normal cursor-pointer">
                           {event.name}
                           <span className="text-muted-foreground ml-1">({event.category})</span>
@@ -152,7 +241,16 @@ export default function Webhooks() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleCreate}>Create Webhook</Button>
+                <Button onClick={handleCreate} disabled={isCreating}>
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Create Webhook"
+                  )}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -176,18 +274,69 @@ export default function Webhooks() {
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         {webhook.name}
-                        {getStatusBadge(webhook.status)}
+                        {getStatusBadge(webhook)}
                       </CardTitle>
                       <CardDescription className="mt-1 font-mono text-xs">{webhook.url}</CardDescription>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleTest(webhook.id)} disabled={testingId === webhook.id}>
-                        {testingId === webhook.id ? <Clock className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleToggleActive(webhook)}
+                      >
+                        {webhook.is_active ? "Deactivate" : "Activate"}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleTest(webhook.id)} 
+                        disabled={testingId === webhook.id}
+                      >
+                        {testingId === webhook.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
                         <span className="ml-1">Test</span>
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDelete(webhook.id)}>
-                        <Trash2 className="h-4 w-4" />
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleRegenerateSecret(webhook.id)}
+                        disabled={regeneratingId === webhook.id}
+                        title="Regenerate secret"
+                      >
+                        {regeneratingId === webhook.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Key className="h-4 w-4" />
+                        )}
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm" disabled={deletingId === webhook.id}>
+                            {deletingId === webhook.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Webhook</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{webhook.name}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(webhook.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 </CardHeader>
@@ -199,19 +348,18 @@ export default function Webhooks() {
                   </div>
                   <div className="flex items-center gap-6 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <span>Total:</span>
-                      <span className="font-medium text-foreground">{webhook.totalDeliveries}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      <span>{webhook.successfulDeliveries}</span>
+                      <span>{webhook.success_count} delivered</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <XCircle className="h-4 w-4 text-destructive" />
-                      <span>{webhook.failedDeliveries}</span>
+                      <span>{webhook.failure_count} failed</span>
                     </div>
-                    {webhook.lastDeliveryAt && (
-                      <div>Last delivery: {new Date(webhook.lastDeliveryAt).toLocaleString()}</div>
+                    {webhook.last_triggered && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        <span>Last: {new Date(webhook.last_triggered).toLocaleString()}</span>
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -219,6 +367,15 @@ export default function Webhooks() {
             ))}
           </div>
         )}
+
+        <Card className="bg-muted/30">
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">
+              <strong>Tip:</strong> Use the webhook secret to verify that requests are coming from GhostWorker. 
+              Check our <a href="#" className="text-primary hover:underline">webhook documentation</a> for integration guides.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
