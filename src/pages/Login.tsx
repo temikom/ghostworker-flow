@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { authApi, getErrorMessage, isAccountLocked, isEmailUnverified, isRateLimited } from "@/lib/api";
 import { ArrowLeft, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 
 type LoginStep = 1 | 2;
@@ -21,12 +23,13 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { login, checkEmail } = useAuth();
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(email)) {
       toast({
@@ -36,7 +39,47 @@ export default function Login() {
       });
       return;
     }
-    setStep(2);
+
+    setIsLoading(true);
+    try {
+      const { exists, providers } = await checkEmail(email);
+      
+      if (!exists) {
+        toast({
+          title: "Account not found",
+          description: "No account found with this email. Would you like to sign up?",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // If user has OAuth providers but no password, show different message
+      if (providers.length > 0 && !exists) {
+        toast({
+          title: "Sign in with " + providers[0],
+          description: `This account uses ${providers.join(", ")} for sign in.`,
+        });
+        return;
+      }
+
+      setStep(2);
+    } catch (error) {
+      if (isRateLimited(error)) {
+        toast({
+          title: "Too many requests",
+          description: "Please wait a moment and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: getErrorMessage(error),
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -53,17 +96,57 @@ export default function Login() {
 
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsLoading(false);
-    
-    toast({
-      title: "Welcome back!",
-      description: "You've successfully signed in.",
-    });
-    
-    navigate("/dashboard");
+    try {
+      await login(email, password);
+      toast({
+        title: "Welcome back!",
+        description: "You've successfully signed in.",
+      });
+    } catch (error) {
+      if (isAccountLocked(error)) {
+        navigate(`/account-locked?email=${encodeURIComponent(email)}`);
+        return;
+      }
+      
+      if (isEmailUnverified(error)) {
+        toast({
+          title: "Email not verified",
+          description: "Please check your email and verify your account first.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (isRateLimited(error)) {
+        toast({
+          title: "Too many attempts",
+          description: "Please wait a moment and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sign in failed",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOAuthClick = async (provider: 'google' | 'microsoft') => {
+    try {
+      const { url } = await authApi.getOAuthUrl(provider);
+      window.location.href = url;
+    } catch (error) {
+      toast({
+        title: "OAuth unavailable",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+    }
   };
 
   const getStepContent = () => {
@@ -88,19 +171,29 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
+                disabled={isLoading}
               />
             </div>
 
-            <Button type="submit" className="w-full" size="lg" variant="brand">
-              Continue
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button type="submit" className="w-full" size="lg" variant="brand" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
             </Button>
 
             <Divider />
 
             <SocialAuthButtons
-              onGoogleClick={() => toast({ title: "Google OAuth", description: "Connect Cloud to enable OAuth" })}
-              onMicrosoftClick={() => toast({ title: "Microsoft OAuth", description: "Connect Cloud to enable OAuth" })}
+              onGoogleClick={() => handleOAuthClick('google')}
+              onMicrosoftClick={() => handleOAuthClick('microsoft')}
             />
 
             <p className="text-center text-sm text-muted-foreground">
@@ -139,9 +232,9 @@ export default function Login() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <a href="#" className="text-sm text-ghost hover:underline">
+                <Link to="/forgot-password" className="text-sm text-ghost hover:underline">
                   Forgot password?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <Input
@@ -152,6 +245,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoFocus
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
