@@ -466,5 +466,104 @@ class BillingService:
         db.refresh(invoice)
         return invoice
 
+    # ==========================================
+    # WEBHOOK HANDLER METHODS
+    # ==========================================
+    
+    async def handle_subscription_created(
+        self,
+        provider: str,
+        provider_subscription_id: str,
+        customer_email: str,
+        plan_code: str,
+        amount: float,
+    ):
+        """Handle subscription created webhook event."""
+        print(f"[BillingService] Processing subscription created for {customer_email}")
+        # Implementation: Look up user by email, create/update subscription
+        pass
+    
+    async def handle_subscription_cancelled(
+        self,
+        provider: str,
+        provider_subscription_id: str,
+    ):
+        """Handle subscription cancelled webhook event."""
+        print(f"[BillingService] Processing subscription cancellation: {provider_subscription_id}")
+        # Implementation: Find subscription by provider ID, mark as cancelled
+        pass
+    
+    async def handle_payment_success(
+        self,
+        provider: str,
+        provider_payment_id: str,
+        customer_email: str,
+        amount: float,
+        currency: str,
+        metadata: dict = None,
+    ):
+        """Handle successful payment webhook event."""
+        print(f"[BillingService] Processing payment success: {provider_payment_id}")
+        print(f"  Amount: {amount} {currency}")
+        print(f"  Customer: {customer_email}")
+        # Implementation: Record payment, update subscription if needed
+        pass
+    
+    async def handle_payment_failed(
+        self,
+        provider: str,
+        provider_payment_id: str,
+        customer_email: str,
+        error_message: str,
+    ):
+        """Handle failed payment webhook event."""
+        print(f"[BillingService] Processing payment failure: {provider_payment_id}")
+        print(f"  Error: {error_message}")
+        # Implementation: Record failed payment, notify user
+        pass
+    
+    async def handle_payment_pending(
+        self,
+        provider: str,
+        provider_payment_id: str,
+        status: str,
+    ):
+        """Handle pending payment (e.g., crypto awaiting confirmation)."""
+        print(f"[BillingService] Payment pending confirmation: {provider_payment_id}")
+        pass
+    
+    async def handle_invoice_created(
+        self,
+        provider: str,
+        invoice_code: str,
+        subscription_code: str,
+        amount: float,
+    ):
+        """Handle invoice created webhook event."""
+        print(f"[BillingService] Invoice created: {invoice_code}")
+        pass
+    
+    async def handle_invoice_payment_failed(
+        self,
+        provider: str,
+        invoice_code: str,
+        subscription_code: str,
+    ):
+        """Handle invoice payment failed webhook event."""
+        print(f"[BillingService] Invoice payment failed: {invoice_code}")
+        pass
+    
+    async def handle_crypto_subscription_payment(
+        self,
+        charge_code: str,
+        plan_id: str,
+        customer_email: str,
+        billing_cycle: str = "monthly",
+    ):
+        """Handle crypto subscription payment confirmation."""
+        print(f"[BillingService] Crypto subscription payment confirmed: {charge_code}")
+        print(f"  Plan: {plan_id}, Customer: {customer_email}")
+        pass
+
 
 billing_service = BillingService()
