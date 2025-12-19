@@ -1,8 +1,9 @@
 import { ReactNode, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 import { Button } from "./ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   LayoutDashboard, 
   MessageSquare, 
@@ -13,7 +14,8 @@ import {
   Menu,
   X,
   Bell,
-  Search
+  Search,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -31,11 +33,28 @@ const navItems = [
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
-  const navigate = useNavigate();
+  const { user, logout, isLoading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    navigate("/");
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (user?.first_name && user?.last_name) {
+      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.substring(0, 2).toUpperCase();
+    }
+    return "U";
   };
 
   return (
@@ -70,10 +89,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="p-3 border-t border-sidebar-border">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+            disabled={isLoggingOut}
+            className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors disabled:opacity-50"
           >
-            <LogOut className="w-5 h-5" />
-            Sign out
+            {isLoggingOut ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <LogOut className="w-5 h-5" />
+            )}
+            {isLoggingOut ? "Signing out..." : "Sign out"}
           </button>
         </div>
       </aside>
@@ -127,6 +151,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   );
                 })}
               </nav>
+
+              <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-sidebar-border">
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors disabled:opacity-50"
+                >
+                  {isLoggingOut ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <LogOut className="w-5 h-5" />
+                  )}
+                  {isLoggingOut ? "Signing out..." : "Sign out"}
+                </button>
+              </div>
             </motion.aside>
           </>
         )}
@@ -160,8 +199,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <span className="absolute top-1 right-1 w-2 h-2 bg-ghost rounded-full" />
             </Button>
             
-            <div className="w-9 h-9 rounded-full bg-ghost/20 flex items-center justify-center">
-              <span className="text-sm font-medium text-ghost">JD</span>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-ghost/20 flex items-center justify-center">
+                <span className="text-sm font-medium text-ghost">{getUserInitials()}</span>
+              </div>
+              {user?.email && (
+                <span className="hidden md:block text-sm text-muted-foreground truncate max-w-[150px]">
+                  {user.email}
+                </span>
+              )}
             </div>
           </div>
         </header>

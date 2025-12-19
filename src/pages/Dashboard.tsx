@@ -1,5 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   MessageSquare, 
   TrendingUp, 
@@ -12,39 +13,57 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 const stats = [
   {
     label: "Total Conversations",
-    value: "1,284",
-    change: "+12.5%",
-    trend: "up",
+    value: "0",
+    change: "—",
+    trend: "neutral",
     icon: MessageSquare,
   },
   {
     label: "Active Users",
-    value: "892",
-    change: "+8.2%",
-    trend: "up",
+    value: "0",
+    change: "—",
+    trend: "neutral",
     icon: Users,
   },
   {
     label: "Orders Today",
-    value: "47",
-    change: "+23.1%",
-    trend: "up",
+    value: "0",
+    change: "—",
+    trend: "neutral",
     icon: ShoppingCart,
   },
   {
     label: "Response Rate",
-    value: "98.5%",
-    change: "-0.3%",
-    trend: "down",
+    value: "—",
+    change: "—",
+    trend: "neutral",
     icon: TrendingUp,
   },
 ];
 
 export default function Dashboard() {
+  const { user } = useAuth();
+
+  // Get greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
+
+  // Get display name
+  const getDisplayName = () => {
+    if (user?.first_name) return user.first_name;
+    if (user?.email) return user.email.split("@")[0];
+    return "there";
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -56,7 +75,7 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-2xl font-semibold text-foreground">
-              Good morning, John
+              {getGreeting()}, {getDisplayName()}
             </h1>
             <p className="text-muted-foreground">
               Here's what's happening with your automations today.
@@ -86,13 +105,12 @@ export default function Dashboard() {
                 </div>
                 <div className={cn(
                   "flex items-center gap-1 text-sm font-medium",
-                  stat.trend === "up" ? "text-success" : "text-destructive"
+                  stat.trend === "up" ? "text-success" : 
+                  stat.trend === "down" ? "text-destructive" : 
+                  "text-muted-foreground"
                 )}>
-                  {stat.trend === "up" ? (
-                    <ArrowUpRight className="w-4 h-4" />
-                  ) : (
-                    <ArrowDownRight className="w-4 h-4" />
-                  )}
+                  {stat.trend === "up" && <ArrowUpRight className="w-4 h-4" />}
+                  {stat.trend === "down" && <ArrowDownRight className="w-4 h-4" />}
                   {stat.change}
                 </div>
               </div>
@@ -154,8 +172,4 @@ export default function Dashboard() {
       </div>
     </DashboardLayout>
   );
-}
-
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
 }

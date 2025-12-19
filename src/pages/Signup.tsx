@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { authApi, getErrorMessage, isRateLimited } from "@/lib/api";
 import { ArrowLeft, ArrowRight, Loader2, Mail, Eye, EyeOff } from "lucide-react";
 
 type SignupStep = 1 | 2 | 3;
@@ -21,8 +23,10 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { signup, checkEmail, resendVerification } = useAuth();
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -35,7 +39,7 @@ export default function Signup() {
            /[0-9]/.test(password);
   };
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(email)) {
       toast({
@@ -45,7 +49,38 @@ export default function Signup() {
       });
       return;
     }
-    setStep(2);
+
+    setIsLoading(true);
+    try {
+      const { exists } = await checkEmail(email);
+      
+      if (exists) {
+        toast({
+          title: "Account exists",
+          description: "An account with this email already exists. Try signing in instead.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setStep(2);
+    } catch (error) {
+      if (isRateLimited(error)) {
+        toast({
+          title: "Too many requests",
+          description: "Please wait a moment and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: getErrorMessage(error),
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -71,21 +106,69 @@ export default function Signup() {
 
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsLoading(false);
-    setStep(3);
+    try {
+      const { verification_required } = await signup(email, password, confirmPassword);
+      
+      if (verification_required) {
+        setStep(3);
+      } else {
+        // Rare case where verification not required
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      toast({
+        title: "Signup failed",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleResendVerification = async () => {
+    if (resendCooldown > 0) return;
+    
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    toast({
-      title: "Verification email sent",
-      description: "We've sent another verification link to your email.",
-    });
+    try {
+      await resendVerification(email);
+      toast({
+        title: "Verification email sent",
+        description: "We've sent another verification link to your email.",
+      });
+      // Set 60 second cooldown
+      setResendCooldown(60);
+      const interval = setInterval(() => {
+        setResendCooldown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (error) {
+      toast({
+        title: "Failed to resend",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOAuthClick = async (provider: 'google' | 'microsoft') => {
+    try {
+      const { url } = await authApi.getOAuthUrl(provider);
+      window.location.href = url;
+    } catch (error) {
+      toast({
+        title: "OAuth unavailable",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+    }
   };
 
   const getStepContent = () => {
@@ -110,19 +193,29 @@ export default function Signup() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
+                disabled={isLoading}
               />
             </div>
 
-            <Button type="submit" className="w-full" size="lg" variant="brand">
-              Continue
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button type="submit" className="w-full" size="lg" variant="brand" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
             </Button>
 
             <Divider />
 
             <SocialAuthButtons
-              onGoogleClick={() => toast({ title: "Google OAuth", description: "Connect Cloud to enable OAuth" })}
-              onMicrosoftClick={() => toast({ title: "Microsoft OAuth", description: "Connect Cloud to enable OAuth" })}
+              onGoogleClick={() => handleOAuthClick('google')}
+              onMicrosoftClick={() => handleOAuthClick('microsoft')}
             />
 
             <p className="text-center text-sm text-muted-foreground">
@@ -169,6 +262,7 @@ export default function Signup() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoFocus
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
@@ -193,6 +287,7 @@ export default function Signup() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
@@ -263,16 +358,23 @@ export default function Signup() {
                 variant="outline"
                 className="w-full"
                 onClick={handleResendVerification}
-                disabled={isLoading}
+                disabled={isLoading || resendCooldown > 0}
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : null}
-                Resend verification email
+                {resendCooldown > 0 
+                  ? `Resend in ${resendCooldown}s` 
+                  : "Resend verification email"}
               </Button>
               
               <button
-                onClick={() => setStep(1)}
+                onClick={() => {
+                  setStep(1);
+                  setEmail("");
+                  setPassword("");
+                  setConfirmPassword("");
+                }}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Use a different email
