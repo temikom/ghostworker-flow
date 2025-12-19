@@ -15,7 +15,8 @@ import {
   X,
   Bell,
   Search,
-  Loader2
+  Loader2,
+  CreditCard
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,6 +29,7 @@ const navItems = [
   { icon: MessageSquare, label: "Conversations", path: "/dashboard/conversations" },
   { icon: Plug, label: "Integrations", path: "/dashboard/integrations" },
   { icon: ShoppingCart, label: "Orders", path: "/dashboard/orders" },
+  { icon: CreditCard, label: "Billing", path: "/dashboard/billing" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings" },
 ];
 

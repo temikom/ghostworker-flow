@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { BillingProvider } from "@/contexts/BillingContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Signup from "./pages/Signup";
@@ -17,6 +18,8 @@ import Integrations from "./pages/Integrations";
 import Conversations from "./pages/Conversations";
 import Orders from "./pages/Orders";
 import Settings from "./pages/Settings";
+import Pricing from "./pages/Pricing";
+import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +35,7 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/account-locked" element={<AccountLocked />} />
+      <Route path="/pricing" element={<Pricing />} />
       
       {/* Protected routes */}
       <Route path="/dashboard" element={
@@ -54,6 +58,11 @@ function AppRoutes() {
           <Orders />
         </ProtectedRoute>
       } />
+      <Route path="/dashboard/billing" element={
+        <ProtectedRoute>
+          <Billing />
+        </ProtectedRoute>
+      } />
       <Route path="/dashboard/settings" element={
         <ProtectedRoute>
           <Settings />
@@ -73,7 +82,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppRoutes />
+          <BillingProvider>
+            <AppRoutes />
+          </BillingProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
