@@ -26,7 +26,7 @@ export interface PlanLimits {
 export interface Subscription {
   id: string;
   planId: PlanTier;
-  status: 'active' | 'canceled' | 'past_due' | 'trialing';
+  status: 'active' | 'canceled' | 'cancelled' | 'past_due' | 'trialing' | 'expired';
   currentPeriodStart: string;
   currentPeriodEnd: string;
   cancelAtPeriodEnd: boolean;

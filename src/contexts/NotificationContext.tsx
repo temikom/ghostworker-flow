@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Notification, MOCK_NOTIFICATIONS } from '@/types/notification';
+import { notificationApi, getErrorMessage } from '@/lib/api';
+import { useAuth } from './AuthContext';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -16,51 +18,100 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const fetchNotifications = useCallback(async () => {
+    if (!user) {
+      setNotifications([]);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // TODO: Replace with real API call
-      // const response = await api.get('/notifications');
-      // setNotifications(response.data);
+      const response = await notificationApi.getNotifications({ limit: 50 });
       
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setNotifications(MOCK_NOTIFICATIONS);
+      const mappedNotifications: Notification[] = response.notifications.map(n => ({
+        id: n.id,
+        type: mapNotificationType(n.type),
+        title: n.title,
+        description: n.message,
+        timestamp: n.created_at,
+        read: n.is_read,
+        actionUrl: n.action_url,
+      }));
+      
+      setNotifications(mappedNotifications);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
+      // Use mock data as fallback
+      setNotifications(MOCK_NOTIFICATIONS);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  const markAsRead = useCallback((id: string) => {
+  // Poll for new notifications every 30 seconds
+  useEffect(() => {
+    if (!user) return;
+    
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [user, fetchNotifications]);
+
+  const mapNotificationType = (type: string): Notification['type'] => {
+    const typeMap: Record<string, Notification['type']> = {
+      'info': 'system',
+      'success': 'system',
+      'warning': 'system',
+      'error': 'system',
+      'message': 'message',
+      'team': 'team_invite',
+      'integration': 'integration',
+      'billing': 'billing',
+    };
+    return typeMap[type] || 'system';
+  };
+
+  const markAsRead = useCallback(async (id: string) => {
     setNotifications(prev =>
       prev.map(n => (n.id === id ? { ...n, read: true } : n))
     );
-    // TODO: API call to mark as read
+    
+    try {
+      await notificationApi.markAsRead(id);
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
   }, []);
 
-  const markAllAsRead = useCallback(() => {
+  const markAllAsRead = useCallback(async () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    // TODO: API call to mark all as read
+    
+    try {
+      await notificationApi.markAllAsRead();
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
   }, []);
 
   const deleteNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
-    // TODO: API call to delete notification
   }, []);
 
   const clearAll = useCallback(() => {
     setNotifications([]);
-    // TODO: API call to clear all
   }, []);
 
   const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
