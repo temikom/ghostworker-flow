@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Plus, ExternalLink } from "lucide-react";
+import UsageLimitBanner from "@/components/UsageLimitBanner";
+import { useFeatureGate } from "@/hooks/useFeatureGate";
 
 const integrations = [
   {
@@ -62,8 +64,12 @@ const integrations = [
 
 export default function Integrations() {
   const { toast } = useToast();
+  const { checkFeature } = useFeatureGate();
 
   const handleConnect = (integration: typeof integrations[0]) => {
+    if (!checkFeature('integrations')) {
+      return;
+    }
     toast({
       title: `Connect ${integration.name}`,
       description: "Enable Cloud to set up this integration.",
@@ -73,6 +79,7 @@ export default function Integrations() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <UsageLimitBanner feature="integrations" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -3,11 +3,17 @@ import { motion } from "framer-motion";
 import { MessageSquare, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import UsageLimitBanner from "@/components/UsageLimitBanner";
+import { useFeatureGate } from "@/hooks/useFeatureGate";
 
 export default function Conversations() {
+  const { isAtLimit } = useFeatureGate();
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <UsageLimitBanner feature="conversations" />
+        <UsageLimitBanner feature="messagesThisMonth" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
