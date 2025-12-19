@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, MessageSquare, Zap, Calendar } from 'lucide-react';
+import { BarChart3, TrendingUp, MessageSquare, Zap, Calendar, Download, FileText } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { AnalyticsDataPoint, IntegrationActivity, generateMockAnalytics, MOCK_INTEGRATION_ACTIVITY } from '@/types/analytics';
+import { exportToCSV, exportIntegrationsToCSV, generatePDFReport } from '@/lib/export';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { toast } from 'sonner';
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState<'7' | '14' | '30'>('30');
@@ -53,17 +57,50 @@ const Analytics = () => {
             <h1 className="text-2xl font-semibold text-foreground">Analytics</h1>
             <p className="text-muted-foreground">Track your usage and performance metrics</p>
           </div>
-          <Select value={timeRange} onValueChange={(v) => setTimeRange(v as typeof timeRange)}>
-            <SelectTrigger className="w-[160px]">
-              <Calendar className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="14">Last 14 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => {
+                  exportToCSV(data, `analytics-${timeRange}days`);
+                  toast.success('CSV exported successfully');
+                }}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  exportIntegrationsToCSV(integrationData, `integrations-${timeRange}days`);
+                  toast.success('Integrations CSV exported');
+                }}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Integrations CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  generatePDFReport(data, integrationData, timeRange);
+                  toast.success('PDF report generated');
+                }}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Generate PDF Report
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Select value={timeRange} onValueChange={(v) => setTimeRange(v as typeof timeRange)}>
+              <SelectTrigger className="w-[160px]">
+                <Calendar className="w-4 h-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="14">Last 14 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Summary Cards */}
