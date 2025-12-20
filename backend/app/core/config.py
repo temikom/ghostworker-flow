@@ -77,6 +77,40 @@ class Settings(BaseSettings):
     COINBASE_COMMERCE_API_KEY: str = ""
     COINBASE_WEBHOOK_SECRET: str = ""
     
+    # OpenAI (GPT-4 & Whisper)
+    OPENAI_API_KEY: str = ""
+    
+    # Twilio (Voice/Video)
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_API_KEY: str = ""
+    TWILIO_API_SECRET: str = ""
+    TWILIO_PHONE_NUMBER: str = ""
+    TWILIO_TWIML_APP_SID: str = ""
+    
+    # CRM - Salesforce
+    SALESFORCE_CLIENT_ID: str = ""
+    SALESFORCE_CLIENT_SECRET: str = ""
+    
+    # CRM - HubSpot
+    HUBSPOT_CLIENT_ID: str = ""
+    HUBSPOT_CLIENT_SECRET: str = ""
+    
+    # CRM - Pipedrive
+    PIPEDRIVE_CLIENT_ID: str = ""
+    PIPEDRIVE_CLIENT_SECRET: str = ""
+    
+    # CRM - Zoho
+    ZOHO_CLIENT_ID: str = ""
+    ZOHO_CLIENT_SECRET: str = ""
+    
+    # Blockchain (Polygon)
+    BLOCKCHAIN_NETWORK: str = "polygon"
+    POLYGON_RPC_URL: str = "https://polygon-rpc.com"
+    BLOCKCHAIN_PRIVATE_KEY: str = ""
+    AUDIT_CONTRACT_ADDRESS: str = ""
+    POLYGONSCAN_API_KEY: str = ""
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
