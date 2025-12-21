@@ -101,6 +101,32 @@ function AppRoutes() {
           <Webhooks />
         </ProtectedRoute>
       } />
+      {/* Advanced Features */}
+      <Route path="/dashboard/sentiment" element={
+        <ProtectedRoute>
+          <SentimentDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard/crm" element={
+        <ProtectedRoute>
+          <CRMSettings />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard/canned-responses" element={
+        <ProtectedRoute>
+          <CannedResponses />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard/ai-training" element={
+        <ProtectedRoute>
+          <AITraining />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard/customers" element={
+        <ProtectedRoute>
+          <CustomerTagging />
+        </ProtectedRoute>
+      } />
       
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
@@ -117,7 +143,9 @@ const App = () => (
         <AuthProvider>
           <BillingProvider>
             <NotificationProvider>
-              <AppRoutes />
+              <WebSocketProvider>
+                <AppRoutes />
+              </WebSocketProvider>
             </NotificationProvider>
           </BillingProvider>
         </AuthProvider>

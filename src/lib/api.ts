@@ -564,4 +564,336 @@ export const webhookApi = {
   },
 };
 
+// ============= Sentiment API =============
+export const sentimentApi = {
+  async getDashboard(params?: { startDate?: string; endDate?: string }) {
+    const { data } = await api.get('/advanced/sentiment/dashboard', { params });
+    return data;
+  },
+  async analyzeConversation(conversationId: string) {
+    const { data } = await api.post(`/advanced/sentiment/analyze/${conversationId}`);
+    return data;
+  },
+  async getTrends(days: number = 30) {
+    const { data } = await api.get('/advanced/sentiment/trends', { params: { days } });
+    return data;
+  },
+};
+
+// ============= CRM API =============
+export const crmApi = {
+  async getConnections() {
+    const { data } = await api.get('/advanced/crm/connections');
+    return data;
+  },
+  async connect(provider: string, credentials: Record<string, string>) {
+    const { data } = await api.post(`/advanced/crm/${provider}/connect`, credentials);
+    return data;
+  },
+  async disconnect(provider: string) {
+    const { data } = await api.delete(`/advanced/crm/${provider}/disconnect`);
+    return data;
+  },
+  async syncContacts(provider: string) {
+    const { data } = await api.post(`/advanced/crm/${provider}/sync`);
+    return data;
+  },
+  async getContacts(provider: string, params?: { limit?: number; offset?: number }) {
+    const { data } = await api.get(`/advanced/crm/${provider}/contacts`, { params });
+    return data;
+  },
+  async getSyncLogs(provider?: string) {
+    const { data } = await api.get('/advanced/crm/sync-logs', { params: { provider } });
+    return data;
+  },
+  async updateSettings(provider: string, settings: Record<string, unknown>) {
+    const { data } = await api.patch(`/advanced/crm/${provider}/settings`, settings);
+    return data;
+  },
+};
+
+// ============= Canned Responses API =============
+export const cannedResponsesApi = {
+  async getAll(params?: { category?: string; search?: string }) {
+    const { data } = await api.get('/advanced/canned-responses', { params });
+    return data;
+  },
+  async getById(id: string) {
+    const { data } = await api.get(`/advanced/canned-responses/${id}`);
+    return data;
+  },
+  async create(responseData: { name: string; content: string; category: string; shortcut?: string; tags?: string[] }) {
+    const { data } = await api.post('/advanced/canned-responses', responseData);
+    return data;
+  },
+  async update(id: string, responseData: Partial<{ name: string; content: string; category: string; shortcut?: string; tags?: string[] }>) {
+    const { data } = await api.patch(`/advanced/canned-responses/${id}`, responseData);
+    return data;
+  },
+  async delete(id: string) {
+    const { data } = await api.delete(`/advanced/canned-responses/${id}`);
+    return data;
+  },
+  async getCategories() {
+    const { data } = await api.get('/advanced/canned-responses/categories');
+    return data;
+  },
+  async createCategory(categoryData: { name: string; color: string }) {
+    const { data } = await api.post('/advanced/canned-responses/categories', categoryData);
+    return data;
+  },
+};
+
+// ============= Customer Tags & Segments API =============
+export const customerApi = {
+  async getTags() {
+    const { data } = await api.get('/advanced/customers/tags');
+    return data;
+  },
+  async createTag(tagData: { name: string; color: string; description?: string }) {
+    const { data } = await api.post('/advanced/customers/tags', tagData);
+    return data;
+  },
+  async updateTag(id: string, tagData: Partial<{ name: string; color: string; description?: string }>) {
+    const { data } = await api.patch(`/advanced/customers/tags/${id}`, tagData);
+    return data;
+  },
+  async deleteTag(id: string) {
+    const { data } = await api.delete(`/advanced/customers/tags/${id}`);
+    return data;
+  },
+  async getSegments() {
+    const { data } = await api.get('/advanced/customers/segments');
+    return data;
+  },
+  async createSegment(segmentData: { name: string; description: string; rules: unknown[] }) {
+    const { data } = await api.post('/advanced/customers/segments', segmentData);
+    return data;
+  },
+  async updateSegment(id: string, segmentData: Partial<{ name: string; description: string; rules: unknown[]; isActive: boolean }>) {
+    const { data } = await api.patch(`/advanced/customers/segments/${id}`, segmentData);
+    return data;
+  },
+  async deleteSegment(id: string) {
+    const { data } = await api.delete(`/advanced/customers/segments/${id}`);
+    return data;
+  },
+  async getCustomers(params?: { tags?: string[]; segment?: string; search?: string; limit?: number; offset?: number }) {
+    const { data } = await api.get('/advanced/customers', { params });
+    return data;
+  },
+  async getCustomer(id: string) {
+    const { data } = await api.get(`/advanced/customers/${id}`);
+    return data;
+  },
+  async updateCustomer(id: string, customerData: { tags?: string[]; metadata?: Record<string, unknown> }) {
+    const { data } = await api.patch(`/advanced/customers/${id}`, customerData);
+    return data;
+  },
+};
+
+// ============= Voice Transcription API =============
+export const voiceApi = {
+  async transcribe(messageId: string) {
+    const { data } = await api.post(`/advanced/voice/${messageId}/transcribe`);
+    return data;
+  },
+  async getTranscription(messageId: string) {
+    const { data } = await api.get(`/advanced/voice/${messageId}/transcription`);
+    return data;
+  },
+  async uploadVoiceMessage(conversationId: string, audioFile: File) {
+    const formData = new FormData();
+    formData.append('audio', audioFile);
+    const { data } = await api.post(`/advanced/voice/${conversationId}/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
+};
+
+// ============= Multi-language AI API =============
+export const languageApi = {
+  async detectLanguage(text: string) {
+    const { data } = await api.post('/advanced/language/detect', { text });
+    return data;
+  },
+  async translate(text: string, targetLanguage: string, sourceLanguage?: string) {
+    const { data } = await api.post('/advanced/language/translate', { text, targetLanguage, sourceLanguage });
+    return data;
+  },
+  async getSettings() {
+    const { data } = await api.get('/advanced/language/settings');
+    return data;
+  },
+  async updateSettings(settings: Record<string, unknown>) {
+    const { data } = await api.patch('/advanced/language/settings', settings);
+    return data;
+  },
+};
+
+// ============= Predictive Analytics API =============
+export const predictiveApi = {
+  async getInsights() {
+    const { data } = await api.get('/advanced/predictive/insights');
+    return data;
+  },
+  async getMetrics() {
+    const { data } = await api.get('/advanced/predictive/metrics');
+    return data;
+  },
+  async getChurnRisk(customerId?: string) {
+    const { data } = await api.get('/advanced/predictive/churn-risk', { params: { customerId } });
+    return data;
+  },
+  async getPeakHours() {
+    const { data } = await api.get('/advanced/predictive/peak-hours');
+    return data;
+  },
+};
+
+// ============= Voice/Video Calls API =============
+export const callsApi = {
+  async initiateCall(conversationId: string, type: 'voice' | 'video') {
+    const { data } = await api.post('/advanced/calls/initiate', { conversationId, type });
+    return data;
+  },
+  async endCall(callId: string) {
+    const { data } = await api.post(`/advanced/calls/${callId}/end`);
+    return data;
+  },
+  async getCallHistory(conversationId?: string) {
+    const { data } = await api.get('/advanced/calls/history', { params: { conversationId } });
+    return data;
+  },
+  async getSettings() {
+    const { data } = await api.get('/advanced/calls/settings');
+    return data;
+  },
+  async updateSettings(settings: Record<string, unknown>) {
+    const { data } = await api.patch('/advanced/calls/settings', settings);
+    return data;
+  },
+  async getCallToken(callId: string) {
+    const { data } = await api.get(`/advanced/calls/${callId}/token`);
+    return data;
+  },
+};
+
+// ============= White-label API =============
+export const whiteLabelApi = {
+  async getConfig() {
+    const { data } = await api.get('/advanced/white-label/config');
+    return data;
+  },
+  async updateConfig(config: Record<string, unknown>) {
+    const { data } = await api.patch('/advanced/white-label/config', config);
+    return data;
+  },
+  async uploadLogo(file: File) {
+    const formData = new FormData();
+    formData.append('logo', file);
+    const { data } = await api.post('/advanced/white-label/logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
+  async uploadFavicon(file: File) {
+    const formData = new FormData();
+    formData.append('favicon', file);
+    const { data } = await api.post('/advanced/white-label/favicon', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
+  async verifyDomain(domain: string) {
+    const { data } = await api.post('/advanced/white-label/verify-domain', { domain });
+    return data;
+  },
+};
+
+// ============= AI Training API =============
+export const aiTrainingApi = {
+  async getDatasets() {
+    const { data } = await api.get('/advanced/ai-training/datasets');
+    return data;
+  },
+  async createDataset(datasetData: { name: string; description?: string }) {
+    const { data } = await api.post('/advanced/ai-training/datasets', datasetData);
+    return data;
+  },
+  async getDataset(id: string) {
+    const { data } = await api.get(`/advanced/ai-training/datasets/${id}`);
+    return data;
+  },
+  async deleteDataset(id: string) {
+    const { data } = await api.delete(`/advanced/ai-training/datasets/${id}`);
+    return data;
+  },
+  async addSample(datasetId: string, sampleData: { input: string; expectedOutput: string; category?: string }) {
+    const { data } = await api.post(`/advanced/ai-training/datasets/${datasetId}/samples`, sampleData);
+    return data;
+  },
+  async getSamples(datasetId: string, params?: { limit?: number; offset?: number }) {
+    const { data } = await api.get(`/advanced/ai-training/datasets/${datasetId}/samples`, { params });
+    return data;
+  },
+  async deleteSample(datasetId: string, sampleId: string) {
+    const { data } = await api.delete(`/advanced/ai-training/datasets/${datasetId}/samples/${sampleId}`);
+    return data;
+  },
+  async startTraining(datasetId: string) {
+    const { data } = await api.post(`/advanced/ai-training/datasets/${datasetId}/train`);
+    return data;
+  },
+  async getTrainingStatus(datasetId: string) {
+    const { data } = await api.get(`/advanced/ai-training/datasets/${datasetId}/status`);
+    return data;
+  },
+  async getModelConfig() {
+    const { data } = await api.get('/advanced/ai-training/model-config');
+    return data;
+  },
+  async updateModelConfig(config: Record<string, unknown>) {
+    const { data } = await api.patch('/advanced/ai-training/model-config', config);
+    return data;
+  },
+};
+
+// ============= Blockchain Audit API =============
+export const blockchainApi = {
+  async getLogs(params?: { eventType?: string; startDate?: string; endDate?: string; verified?: boolean; limit?: number; offset?: number }) {
+    const { data } = await api.get('/advanced/blockchain/logs', { params });
+    return data;
+  },
+  async verifyLog(logId: string) {
+    const { data } = await api.post(`/advanced/blockchain/logs/${logId}/verify`);
+    return data;
+  },
+  async getLogDetails(transactionHash: string) {
+    const { data } = await api.get(`/advanced/blockchain/logs/tx/${transactionHash}`);
+    return data;
+  },
+  async getStats() {
+    const { data } = await api.get('/advanced/blockchain/stats');
+    return data;
+  },
+};
+
+// ============= AI Summary API =============
+export const summaryApi = {
+  async generateSummary(conversationId: string) {
+    const { data } = await api.post(`/advanced/summary/${conversationId}/generate`);
+    return data;
+  },
+  async getSummary(conversationId: string) {
+    const { data } = await api.get(`/advanced/summary/${conversationId}`);
+    return data;
+  },
+  async getRecentSummaries(limit: number = 10) {
+    const { data } = await api.get('/advanced/summary/recent', { params: { limit } });
+    return data;
+  },
+};
+
 export default api;
