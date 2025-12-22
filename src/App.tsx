@@ -34,6 +34,10 @@ import CRMSettings from "./pages/CRMSettings";
 import CannedResponses from "./pages/CannedResponses";
 import AITraining from "./pages/AITraining";
 import CustomerTagging from "./pages/CustomerTagging";
+import PredictiveAnalytics from "./pages/PredictiveAnalytics";
+import VoiceVideoCalls from "./pages/VoiceVideoCalls";
+import WhitelabelSettings from "./pages/WhitelabelSettings";
+import BlockchainAuditLogs from "./pages/BlockchainAuditLogs";
 
 const queryClient = new QueryClient();
 
@@ -52,87 +56,28 @@ function AppRoutes() {
       <Route path="/payment/callback" element={<PaymentCallback />} />
       
       {/* Protected routes */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/integrations" element={
-        <ProtectedRoute>
-          <Integrations />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/conversations" element={
-        <ProtectedRoute>
-          <Conversations />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/orders" element={
-        <ProtectedRoute>
-          <Orders />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/billing" element={
-        <ProtectedRoute>
-          <Billing />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/invoices" element={
-        <ProtectedRoute>
-          <Invoices />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/analytics" element={
-        <ProtectedRoute>
-          <Analytics />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/team" element={
-        <ProtectedRoute>
-          <Team />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/settings" element={
-        <ProtectedRoute>
-          <Settings />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/email-preferences" element={
-        <ProtectedRoute>
-          <EmailPreferences />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/webhooks" element={
-        <ProtectedRoute>
-          <Webhooks />
-        </ProtectedRoute>
-      } />
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/dashboard/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
+      <Route path="/dashboard/conversations" element={<ProtectedRoute><Conversations /></ProtectedRoute>} />
+      <Route path="/dashboard/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+      <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+      <Route path="/dashboard/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
+      <Route path="/dashboard/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+      <Route path="/dashboard/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
+      <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+      <Route path="/dashboard/email-preferences" element={<ProtectedRoute><EmailPreferences /></ProtectedRoute>} />
+      <Route path="/dashboard/webhooks" element={<ProtectedRoute><Webhooks /></ProtectedRoute>} />
+      
       {/* Advanced Features */}
-      <Route path="/dashboard/sentiment" element={
-        <ProtectedRoute>
-          <SentimentDashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/crm" element={
-        <ProtectedRoute>
-          <CRMSettings />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/canned-responses" element={
-        <ProtectedRoute>
-          <CannedResponses />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/ai-training" element={
-        <ProtectedRoute>
-          <AITraining />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard/customers" element={
-        <ProtectedRoute>
-          <CustomerTagging />
-        </ProtectedRoute>
-      } />
+      <Route path="/dashboard/sentiment" element={<ProtectedRoute><SentimentDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard/crm" element={<ProtectedRoute><CRMSettings /></ProtectedRoute>} />
+      <Route path="/dashboard/canned-responses" element={<ProtectedRoute><CannedResponses /></ProtectedRoute>} />
+      <Route path="/dashboard/ai-training" element={<ProtectedRoute><AITraining /></ProtectedRoute>} />
+      <Route path="/dashboard/customer-tags" element={<ProtectedRoute><CustomerTagging /></ProtectedRoute>} />
+      <Route path="/dashboard/predictions" element={<ProtectedRoute><PredictiveAnalytics /></ProtectedRoute>} />
+      <Route path="/dashboard/calls" element={<ProtectedRoute><VoiceVideoCalls /></ProtectedRoute>} />
+      <Route path="/dashboard/whitelabel" element={<ProtectedRoute><WhitelabelSettings /></ProtectedRoute>} />
+      <Route path="/dashboard/audit-logs" element={<ProtectedRoute><BlockchainAuditLogs /></ProtectedRoute>} />
       
       {/* 404 */}
       <Route path="*" element={<NotFound />} />

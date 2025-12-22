@@ -20,7 +20,16 @@ import {
   BarChart3,
   Users,
   Mail,
-  Webhook
+  Webhook,
+  Smile,
+  Building2,
+  FileText,
+  Brain,
+  Tags,
+  TrendingUp,
+  Phone,
+  Palette,
+  Shield
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -34,6 +43,15 @@ const navItems = [
   { icon: Plug, label: "Integrations", path: "/dashboard/integrations" },
   { icon: ShoppingCart, label: "Orders", path: "/dashboard/orders" },
   { icon: BarChart3, label: "Analytics", path: "/dashboard/analytics" },
+  { icon: Smile, label: "Sentiment", path: "/dashboard/sentiment" },
+  { icon: TrendingUp, label: "Predictions", path: "/dashboard/predictions" },
+  { icon: Building2, label: "CRM", path: "/dashboard/crm" },
+  { icon: FileText, label: "Canned Responses", path: "/dashboard/canned-responses" },
+  { icon: Tags, label: "Customer Tags", path: "/dashboard/customer-tags" },
+  { icon: Brain, label: "AI Training", path: "/dashboard/ai-training" },
+  { icon: Phone, label: "Voice & Video", path: "/dashboard/calls" },
+  { icon: Palette, label: "White-label", path: "/dashboard/whitelabel" },
+  { icon: Shield, label: "Audit Logs", path: "/dashboard/audit-logs" },
   { icon: Users, label: "Team", path: "/dashboard/team" },
   { icon: CreditCard, label: "Billing", path: "/dashboard/billing" },
   { icon: Webhook, label: "Webhooks", path: "/dashboard/webhooks" },
