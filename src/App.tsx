@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BillingProvider } from "@/contexts/BillingContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { WebSocketProvider } from "@/contexts/WebSocketContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Signup from "./pages/Signup";
@@ -28,6 +29,11 @@ import EmailPreferences from "./pages/EmailPreferences";
 import Webhooks from "./pages/Webhooks";
 import PaymentCallback from "./pages/PaymentCallback";
 import NotFound from "./pages/NotFound";
+import SentimentDashboard from "./pages/SentimentDashboard";
+import CRMSettings from "./pages/CRMSettings";
+import CannedResponses from "./pages/CannedResponses";
+import AITraining from "./pages/AITraining";
+import CustomerTagging from "./pages/CustomerTagging";
 
 const queryClient = new QueryClient();
 
