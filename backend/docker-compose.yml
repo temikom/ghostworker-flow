@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api:
     build: .
@@ -12,6 +10,7 @@ services:
       - redis
     volumes:
       - ./app:/app/app
+    restart: unless-stopped
 
   db:
     image: postgres:15-alpine
@@ -23,6 +22,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -30,15 +30,23 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    restart: unless-stopped
 
   nginx:
     image: nginx:alpine
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      # Mount your SSL certificates - UPDATE THESE PATHS
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+      - /etc/ssl/private:/etc/ssl/private:ro
+      # If using Let's Encrypt, uncomment and use:
+      # - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - api
+    restart: unless-stopped
 
 volumes:
   postgres_data:
