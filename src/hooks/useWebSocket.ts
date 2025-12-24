@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { WebSocketMessage, ConnectionStatus } from '@/types/advanced';
+import { WS_BASE_URL, WEBSOCKET } from '@/lib/config';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws';
-const RECONNECT_DELAY = 3000;
-const MAX_RECONNECT_ATTEMPTS = 5;
-const HEARTBEAT_INTERVAL = 30000;
+const RECONNECT_DELAY = WEBSOCKET.RECONNECT_DELAY;
+const MAX_RECONNECT_ATTEMPTS = WEBSOCKET.MAX_RECONNECT_ATTEMPTS;
+const HEARTBEAT_INTERVAL = WEBSOCKET.HEARTBEAT_INTERVAL;
 
 interface UseWebSocketOptions {
   onMessage?: (message: WebSocketMessage) => void;
@@ -64,7 +64,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
     if (!token) return;
 
     try {
-      const wsUrl = `${WS_URL}?token=${encodeURIComponent(token)}`;
+      const wsUrl = `${WS_BASE_URL}?token=${encodeURIComponent(token)}`;
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
