@@ -60,7 +60,7 @@ const WhitelabelSettings = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await whiteLabelApi.updateConfig(config);
+      await whiteLabelApi.updateConfig(config as unknown as Record<string, unknown>);
       toast.success('Branding settings saved successfully');
     } catch (error) {
       console.error('Failed to save branding:', error);
