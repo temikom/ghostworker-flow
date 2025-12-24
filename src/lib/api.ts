@@ -9,9 +9,7 @@ import type {
   EmailVerificationResponse,
   ApiError,
 } from '@/types/auth';
-
-// API base URL - configure for your environment
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+import { API_BASE_URL, TIMEOUTS } from '@/lib/config';
 
 // Token storage (in-memory for security)
 let accessToken: string | null = null;
@@ -32,9 +30,12 @@ export function setTokens(tokens: TokenPair | null) {
   if (tokens) {
     accessToken = tokens.access_token;
     refreshToken = tokens.refresh_token;
+    // Store in localStorage for WebSocket connection
+    localStorage.setItem('auth_token', tokens.access_token);
   } else {
     accessToken = null;
     refreshToken = null;
+    localStorage.removeItem('auth_token');
   }
   authCallback?.(tokens);
 }
@@ -49,7 +50,7 @@ const api: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: TIMEOUTS.DEFAULT,
 });
 
 // Request interceptor - add auth header

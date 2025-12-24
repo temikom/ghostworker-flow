@@ -11,6 +11,11 @@ services:
     volumes:
       - ./app:/app/app
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   db:
     image: postgres:15-alpine
@@ -39,11 +44,12 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      # Mount your SSL certificates - UPDATE THESE PATHS
+      # Mount your SSL certificates - UPDATE THESE PATHS to match your VPS
       - /etc/ssl/certs:/etc/ssl/certs:ro
       - /etc/ssl/private:/etc/ssl/private:ro
-      # If using Let's Encrypt, uncomment and use:
-      # - /etc/letsencrypt:/etc/letsencrypt:ro
+      # If using Let's Encrypt, use these instead:
+      # - /etc/letsencrypt/live/reficulbot.site/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
+      # - /etc/letsencrypt/live/reficulbot.site/privkey.pem:/etc/ssl/private/privkey.pem:ro
     depends_on:
       - api
     restart: unless-stopped
